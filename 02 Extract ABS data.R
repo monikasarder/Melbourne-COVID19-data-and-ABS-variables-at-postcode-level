@@ -11,80 +11,27 @@ library(readxl)
 library(readr)
 
 
-###Load all files
+###Load all tables for dataset
 path ="2016_GCP_POA_for_Vic_short-header/2016 Census GCP Postal Areas for VIC"
 filenames <- list.files(path,
                         pattern = "*.csv", full.names = TRUE)  
 
-filenames
+dat = map(filenames, read_csv)
+
 ##Create list of data frame names without the ".csv" part 
-names <-str_sub(filenames,start = 83, end = -13)
+table_names <-str_sub(filenames,start = 83, end = -13)
 
+dat <- set_names(dat, table_names)
 
-#We are only interested in Melbourne postcodes
+# The metadata for each table name is set out in 
+metadata <- read_excel(
+  "2016_GCP_POA_for_Vic_short-header/Metadata/Metadata_2016_GCP_DataPack.xlsx")
 
-for(i in names){
-  filepath <- file.path(path,
-                        paste("2016Census_",i,"_VIC_POA.csv",sep=""))
-  assign(i, read.csv(filepath),stringsAsFactors = FALSE)
-}
+#we would prefer to work with numeric not doubles
+dat <-
+  map(dat, function(x) 
+    map_if(x, is.double, ~as.numeric(.x)))
 
-"2016_GCP_POA_for_Vic_short-header/2016 Census GCP Postal Areas for VIC"
-G01<- G01 %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G01[2:ncol(G01)] <- lapply(G01[2:ncol(G01)], as.numeric)
-
-#Population profile
-G01 <- select(G01, Tot_P_P, Lang_spoken_home_Oth_Lang_P, POA_CODE_2016)
-
-#G02 Selected medians
-
-G02<- G02 %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G02[2:ncol(G02)] <- lapply(G02[2:ncol(G02)], as.numeric)
-
-
-#Job
-G57B<- G57B %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G57B[2:ncol(G57B)] <- lapply(G57B[2:ncol(G57B)], as.numeric)
-
-#Rent
-G33<- G33 %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G33[2:ncol(G33)] <- lapply(G33[2:ncol(G33)], as.numeric)
-
-#Rent
-G33<- G33 %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G33[2:ncol(G33)] <- lapply(G33[2:ncol(G33)], as.numeric)
-
-#Industry
-G53A<- G53A %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G53A[2:ncol(G53A)] <- lapply(G53A[2:ncol(G53A)], as.numeric)
-names(G53A)
-#Commute
-G59<- G59 %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G59[2:ncol(G59)] <- lapply(G59[2:ncol(G59)], as.numeric)
-
-#Age intervals
-G03<- G03 %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G03[2:ncol(G03)] <- lapply(G03[2:ncol(G03)], as.numeric)
-
-#Labour force
-G43B<- G43B %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G43B[2:ncol(G43B)] <- lapply(G43B[2:ncol(G43B)], as.numeric)
-
-names(G43B)
-
-#Labour force
-G37<- G37 %>% mutate(POA_CODE_2016= str_replace(POA_CODE_2016,"POA",""))
-
-G37[2:ncol(G37)] <- lapply(G37[2:ncol(G37)], as.numeric)
 
 internet <- names(G37)
 #Persons <- c("Persons","Psns","Ps")
