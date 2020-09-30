@@ -367,15 +367,44 @@ summary {
 
 <div id="postcode-level-variables" class="section level1">
 <h1>postcode-level-variables</h1>
-<p>This project utilised census data at the postcode level downloaded from the <a href="https://datapacks.censusdata.abs.gov.au/datapacks/">ABS website</a></p>
-<p>The following options were selected:</p>
+<p>The aim of this repository is to allow others to reproduce the analysis underten on my blot ‘Deploy the Data’ in the post <a href="https://www.deploythedata.com/2020/09/11/postcode-characteristics-of-melbournes-covid19-hotspots/">Postcode characteristics of Melbourne’s COVID19 hotspots</a></p>
+<p>The geospatial characteristics of Melbourne’s postcode and the number of cumulative cases at the peak of the second wave on 6 August 2020. The following characteristics showed positive and statistically significant relationships between COVID19 infection levels and the proportion of residents:</p>
 <ul>
-<li>Step 1: 2016 Census Datapacks<br />
+<li>living below the poverty line<br />
 </li>
-<li>Step 2: General Community Profile<br />
-</li>
-<li>Step 3: Postal Areas</li>
+<li>living in rental properties</li>
+<li>living in a home without an internet connection</li>
+<li>speaking a language other than English in the home</li>
+<li>living in a flat or semi-detached home (cf a detached house)</li>
+<li>working in the transport industry; and</li>
+<li>who are below the median age</li>
 </ul>
+<div id="step-01-obtain-and-visualise-melbourne-covid19-data-at-the-peak" class="section level3">
+<h3>STEP 01 Obtain and visualise Melbourne COVID19 data at the peak</h3>
+<p>The script for step one is <strong>01 Melbourne shapes and COVID19 data.R</strong>. It also requires that <strong>melbourne.postcode.list.xlsx</strong> is available in your working directory. Both are available in this repository.</p>
+<p>Prior to running you will need to install Will Mackeys <code>absmaps</code>, which makes it straightforward to download, compress and convert ABS shapefile data to <code>sf</code> objects to be used in R.</p>
+<p>Download and installation details are available from Will’s GitHub found here: <a href="https://github.com/wfmackey/absmapsdata" class="uri">https://github.com/wfmackey/absmapsdata</a></p>
+<p>Running the script produces a dataset which contains case numbers on 6 August 2020 (daily and cumulative) for all Melbourne postcodes and suburb names.</p>
+<p>The dataset is stored in <strong>Melbourne_case_data.RDS</strong></p>
+</div>
+<div id="step-02-download-and-prepare-abs-data-at-the-postcode" class="section level3">
+<h3>STEP 02 Download and Prepare ABS data at the Postcode</h3>
+<p>This project utilised census data at the postcode level downloaded from the <a href="https://datapacks.censusdata.abs.gov.au/datapacks/">ABS website</a>. Simply go to the DataPacks page at <a href="https://datapacks.censusdata.abs.gov.au/datapacks/" class="uri">https://datapacks.censusdata.abs.gov.au/datapacks/</a> and select the following options:</p>
+<ul>
+<li>Census year: 2016 Census Datapacks<br />
+</li>
+<li>DataPacks type: General Community Profile<br />
+</li>
+<li>Select Geography: Postal Areas<br />
+</li>
+<li>Geographies: Vic</li>
+</ul>
+<p>Download and unzip the folder <strong>2016_GCP_POA_for_Vic_short-header</strong> and place in your working director. This is also available from this repo.</p>
+</div>
+<div id="step-03-prepare-variables-at-postcode-level-and-join-to-melbourne-cases-dataset" class="section level3">
+<h3>STEP 03 Prepare variables at postcode level and join to Melbourne cases dataset</h3>
+<p>Each table from the data folder was then read into R using the script: <strong>Read.ABS.tables.R</strong></p>
+</div>
 </div>
 
 
