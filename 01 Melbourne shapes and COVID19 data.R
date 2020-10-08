@@ -71,3 +71,5 @@ dat %>%
   layout(geo = g)
 
 saveRDS(dat, "Melbourne_case_data.RDS")
+
+head(dat)

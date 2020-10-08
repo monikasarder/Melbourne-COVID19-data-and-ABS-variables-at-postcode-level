@@ -9,30 +9,252 @@ library(corrr)
 library(Hmisc)
 library(readxl)
 library(readr)
-
+library(repurrrsive)
 
 ###Load all tables for dataset
 path ="2016_GCP_POA_for_Vic_short-header/2016 Census GCP Postal Areas for VIC"
 filenames <- list.files(path,
                         pattern = "*.csv", full.names = TRUE)  
 
-dat = map(filenames, read_csv)
+pc = map(filenames, read_csv)
 
 ##Create list of data frame names without the ".csv" part 
 table_names <-str_sub(filenames,start = 83, end = -13)
 
-dat <- set_names(dat, table_names)
+pc <- set_names(pc, table_names)
 
 # The metadata for each table name is set out in 
 metadata <- read_excel(
   "2016_GCP_POA_for_Vic_short-header/Metadata/Metadata_2016_GCP_DataPack.xlsx")
 
 #we would prefer to work with numeric not doubles
-dat <-
-  map(dat, function(x) 
+pc <-
+  map(pc, function(x) 
     map_if(x, is.double, ~as.numeric(.x)))
 
 
+pc <-
+  map(pc, function(x) map_if(x, is.character,
+                             ~sub('POA', '', .x)))
+
+
+change_names <- function(x) {
+  names(x) <- sub("POA_CODE_2016", "Postcode", names(x))
+  x
+}
+
+pc <- map(pc, ~change_names(.x))
+  
+#LINK COVID DATA TO ABS DATA elements
+dat <-readRDS("Melbourne_case_data.RDS")
+
+
+#################
+#Table G01 Selected Person Characteristics by Sex
+
+G01 <-pc[['G01']] %>% 
+  as.data.frame()
+
+#extract variables of interest - 
+G01 <- G01 %>%
+  select(Postcode, Tot_P_P, Lang_spoken_home_Oth_Lang_P)
+
+#link to dataset
+datm <- left_join(dat, G01, by = "Postcode")
+names(datm)
+
+#normalise confirmed cases for population size (cases per 100K)
+datm <- datm %>% 
+  mutate(Cases.per.100K = `Confirmed cases (ever)`/Tot_P_P*100000) %>%
+  mutate(Cases.per.100K = round(Cases.per.100K, 2))
+
+datm$Cases.per.100K[is.na(datm$Cases.per.100K)]<-0
+
+#Postcode sizes very variable 
+summary(datm$Tot_P_P)
+
+
+
+#Remove postcodes with small population  
+datm$Cases.per.100K<-ifelse(datm$Tot_P_P <1500, 0, datm$Cases.per.100K)
+
+#Remove postcodes with recent estates
+datm$Cases.per.100K <-ifelse(datm$Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"), 0, datm$Cases.per.100K)
+
+#Clean up names
+datm <- datm %>% mutate(Suburb = str_replace(Suburb, "melbourne","Melbourne"))
+
+#Does it look right
+
+g <- list(showlegend = FALSE,
+          showframe = FALSE,
+          showcoastlines = FALSE,
+          projection = list(type = 'Mercator')
+)
+
+datm %>%
+  plot_geo(split = ~Postcode, showlegend = FALSE, hoverinfo = "text",
+           text = ~paste("Area:", Suburb, "<br>","Cases:", Cases.per.100K)) %>%
+  add_sf(color = ~Cases.per.100K,
+         hoveron = "points+fills") %>%
+  layout(geo = g)
+
+#drop geometry
+datm <- st_set_geometry(datm, NULL)
+
+#Remove postcodes with recent estates
+#datm <-ifelse(datm$Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"), 0, datm$Cases.per.100K)
+
+
+datm <- datm %>% 
+  filter(Tot_P_P!=0)
+ggplot(datm, aes(x = reorder(Postcode, -Cases.per.100K), y = Cases.per.100K)) +
+  geom_bar(stat = "identity")
+
+#remove extreme values
+datm <-datm %>%
+  filter(!Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"))
+
+#Correlation between language and COVID
+datm <- datm %>% mutate(Lang.NE = Lang_spoken_home_Oth_Lang_P/Tot_P_P)
+
+cor.test(datm$Lang.NE, datm$Cases.per.100K)
+
+#################
+#Table G02 Selected Medians and Averages
+G02 <-pc[['G02']] %>% 
+  as.data.frame() 
+
+G02 <- G02 %>% select(Postcode, Median_age_persons, Median_tot_hhd_inc_weekly, Average_household_size)
+
+datm <-left_join(datm, G02, by = "Postcode")
+
+#Test correlations COVID with age, income, household
+cor.test(datm$Cases.per.100K, datm$Median_age_persons)
+
+cor.test(datm$Cases.per.100K, datm$Median_tot_hhd_inc_weekly)
+
+cor.test(datm$Cases.per.100K, datm$Average_household_size)
+
+
+#################
+# Read in ABS table G17 Total Personal Income (Weekly) by Age by Sex
+#Income brackets are spread across two sheets
+
+G17B <-pc[['G17B']] %>% 
+  as.data.frame()
+
+G17C <-pc[['G17C']] %>% 
+  as.data.frame()
+
+names(G17C)
+
+### select low income brackets at Person level
+G17B <- G17B %>% select(Postcode, P_Neg_Nil_income_Tot, P_1_149_Tot ,P_150_299_Tot ,P_300_399_Tot, 
+               P_400_499_Tot,P_500_649_Tot,P_650_799_Tot , P_800_999_Tot)
+
+G17C <- G17C %>% select(Postcode,P_1000_1249_Tot, P_1250_1499_Tot,P_1500_1749_Tot, 
+                              P_1750_1999_Tot, P_2000_2999_Tot,  P_3000_more_Tot, P_PI_NS_ns_Tot, P_Tot_Tot)
+
+
+G17 <- left_join(G17B, G17C, by  = "Postcode")
+
+#Below poverty line taken as below $500 per week. Not stated income and negative income (potentially wealthy retirees etc) excluded
+G17 <- G17 %>%
+  mutate(Low.income = P_1_149_Tot +P_150_299_Tot + P_300_399_Tot + P_400_499_Tot) %>%
+  mutate(Total_included = P_Tot_Tot-P_PI_NS_ns_Tot-P_Neg_Nil_income_Tot) %>%
+            mutate(Percent.poverty = round(Low.income/Total_included*100, digits = 2))
+
+G17 <- G17 %>% select(Postcode, Percent.poverty, Low.income)
+
+datm <- left_join(datm, G17, by = "Postcode")
+
+
+cor.test(datm$Cases.per.100K, datm$Percent.poverty)
+
+#################
+# Read in ABS table G32 Dwelling Structure
+
+G32 <-pc[['G32']] %>% 
+  as.data.frame()
+
+names(G32)
+
+G32 <- G32 %>% select(Postcode, OPDs_Separate_house_Persons,  OPDs_SD_r_t_h_th_Tot_Psns,OPDs_Flt_apart_Tot_Psns,
+                      OPDs_Other_dwelling_Tot_Psns, Unoccupied_PDs_Psns, OPDs_Dwlling_structur_NS_Psns,Total_PDs_Persons)
+
+
+G32 <-   G32 %>%  rename (House = OPDs_Separate_house_Persons, Semi.detached = OPDs_SD_r_t_h_th_Tot_Psns,
+                                    Flat = OPDs_Flt_apart_Tot_Psns,
+                                    Other = OPDs_Other_dwelling_Tot_Psns, Not.stated = OPDs_Dwlling_structur_NS_Psns, 
+                                    Unoccupied = Unoccupied_PDs_Psns,
+                                    Total.dwelling =Total_PDs_Persons)
+
+dwelling.types <- c("House","Semi.detached","Flat","Other", "Not.stated")
+
+dwelling.perc <-str_c(dwelling.types, "(%)", sep = " ")
+
+str(G32)
+G32 <-G32 %>%
+  mutate_at(.vars = dwelling.types,
+            .funs = list(Percent = ~ (./Total.dwelling)*100))
+
+G32 <-G32 %>% mutate_if(is.numeric, round, digits=3)
+
+G32 <- G32 %>% rename(Occupied.Dwellings =   Total.dwelling)
+
+names(G32)
+
+bracket.table <- bracket.table %>% 
+  select(Postcode, Suburb, Cases.per.100K, all_of(brackets), P_Tot_Bracket, Include)
+
+
+
+
+bracket.table <- bracket.table %>%
+  mutate(L = P_1_149_Tot +P_150_299_Tot + P_300_399_Tot + P_400_499_Tot) %>%
+  mutate(Percent.poverty = L/P_Tot_Bracket)
+
+Income <- bracket.table %>% select(Postcode, Suburb, Cases.per.100K, L,  P_Tot_Bracket, Percent.poverty,Include)
+
+
+Income <- Income %>% mutate(Percent.poverty = round(Percent.poverty*100, 2))
+
+names(Income)<-c("Postcode","Suburb","Cases.per.100K","Personal income below 500", "Over 15 persons",
+                 "(%) Personal income below 500","Include")
+
+head(Income)
+write.csv(Income, "Blog.poverty.csv", row.names = FALSE)
+cor.test(bracket.table$Cases.per.100K, bracket.table$Percent.poverty)
+# new.intervals <- c("L","ML","MH","H")
+
+names(bracket.table)
+bracket.table <-bracket.table %>%
+  mutate_at(.vars = vars(all_of(brackets)),
+            .funs = list(Perc = ~ (./P_Tot_Bracket)))
+
+
+#new.int.perc <- str_c(new.intervals, "Perc", sep = "_")
+brackets.perc <- str_c(brackets, "Perc", sep = "_")
+bracket.corr <- bracket.table %>% select(Cases.per.100K, brackets.perc)
+
+head(bracket.corr)
+
+bracket.corr.table <-bracket.corr %>% 
+  correlate() %>% 
+  focus(Cases.per.100K) 
+
+bracket.corr.table
+
+res2 <- rcorr(as.matrix(bracket.corr))
+res2
+head(G02)
+
+head(G02)
+head(datm)
+abs <- G01 %>%
+  map(flatten) %>%
+  bind_rows()
 internet <- names(G37)
 #Persons <- c("Persons","Psns","Ps")
 #Persons_match <-str_c(Persons, collapse = "|")
@@ -55,6 +277,7 @@ Persons_match <-str_c(Persons, collapse = "|")
 Persons_cols <- str_subset(G32.names, Persons_match)
 G32 <- G32 %>% select(POA_CODE_2016, OPDs_Separate_house_Persons, OPDs_SD_r_t_h_th_Tot_Psns,OPDs_Flt_apart_Tot_Psns,
                       OPDs_Other_dwelling_Tot_Psns, Unoccupied_PDs_Psns, OPDs_Dwlling_structur_NS_Psns,Total_PDs_Persons)
+
 
 
 #male income
