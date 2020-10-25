@@ -55,7 +55,7 @@ dat <-readRDS("Melbourne_case_data.RDS")
 G01 <-pc[['G01']] %>% 
   as.data.frame()
 
-#extract variables of interest - 
+#extract variables of interest 
 G01 <- G01 %>%
   select(Postcode, Tot_P_P, Lang_spoken_home_Oth_Lang_P)
 
@@ -72,14 +72,11 @@ datm$Cases.per.100K[is.na(datm$Cases.per.100K)]<-0
 
 #Postcode sizes very variable 
 
-
-
-
 #Remove postcodes with small population  
-datm$Cases.per.100K<-ifelse(datm$Tot_P_P <1500, 0, datm$Cases.per.100K)
+#datm$Cases.per.100K<-ifelse(datm$Tot_P_P <1500, 0, datm$Cases.per.100K)
 
 #Remove postcodes with recent estates
-datm$Cases.per.100K <-ifelse(datm$Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"), 0, datm$Cases.per.100K)
+#datm$Cases.per.100K <-ifelse(datm$Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"), 0, datm$Cases.per.100K)
 
 #Clean up names
 datm <- datm %>% mutate(Suburb = str_replace(Suburb, "melbourne","Melbourne"))
@@ -112,8 +109,8 @@ ggplot(datm, aes(x = reorder(Postcode, -Cases.per.100K), y = Cases.per.100K)) +
   geom_bar(stat = "identity")
 
 #remove extreme values
-datm <-datm %>%
-  filter(!Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"))
+#datm <-datm %>%
+#  filter(!Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"))
 
 
 #################
@@ -378,3 +375,12 @@ industry.corr<- industry.corr[-1,] %>%
 
 
 industry.corr
+
+####JOIN normalised variables with geo object
+
+dat <- dat %>% select(-postcode_num_2016,-cent_lat,-cent_long, -Suburb,-`Confirmed cases (ever)`,
+                      -`Active cases (current)`)
+
+dat_final <- left_join(dat, datm, by = "Postcode")
+
+saveRDS(dat_final, "Melbourne.spatial.COVID19.RDS")

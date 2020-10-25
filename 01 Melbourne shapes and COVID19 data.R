@@ -56,6 +56,7 @@ dat$`Confirmed cases (ever)`[is.na(dat$`Confirmed cases (ever)`)]<-0
 
 #Step 05
 #determine layout and plot
+#visualise to see that it makes sense
 
 g <- list(showlegend = FALSE,
           showframe = FALSE,
