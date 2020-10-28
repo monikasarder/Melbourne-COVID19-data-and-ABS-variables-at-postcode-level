@@ -135,13 +135,14 @@ G17C <- G17C %>% select(Postcode,P_1000_1249_Tot, P_1250_1499_Tot,P_1500_1749_To
 
 G17 <- left_join(G17B, G17C, by  = "Postcode")
 
-#Below poverty line taken as below $500 per week. Not stated income and negative income (potentially wealthy retirees etc) excluded
+#Below poverty line taken as below $500 per week. 
+#Not stated income and negative income excluded (potentially wealthy retirees etc - unclear if relectance is due to above or below)
 G17 <- G17 %>%
   mutate(Low.income = P_1_149_Tot +P_150_299_Tot + P_300_399_Tot + P_400_499_Tot) %>%
-  mutate(Total_included = P_Tot_Tot-P_PI_NS_ns_Tot-P_Neg_Nil_income_Tot) %>%
-  mutate(Percent.poverty = round(Low.income/Total_included*100, digits = 2))
+  mutate(Total_included_income = P_Tot_Tot-P_PI_NS_ns_Tot-P_Neg_Nil_income_Tot) %>%
+  mutate(Percent.poverty = round(Low.income/Total_included_income*100, digits = 2))
 
-G17 <- G17 %>% select(Postcode, Percent.poverty, Low.income)
+G17 <- G17 %>% select(Postcode, Percent.poverty, Low.income, Total_included_income)
 
 datm <- left_join(datm, G17, by = "Postcode")
 
@@ -174,7 +175,7 @@ G33 <-G33 %>%
 
 G33 <-G33 %>% mutate_if(is.numeric, round, digits=3)
 
-G33 <- G33 %>% select(Postcode, all_of(tenure.perc))
+G33 <- G33 %>% select(Postcode, all_of(tenure.perc), all_of(tenure), Total_Total)
 
 datm <- left_join(datm, G33, by = "Postcode")
 
@@ -225,7 +226,7 @@ G32 <-G32 %>%
 
 G32 <-G32 %>% mutate_if(is.numeric, round, digits=3)
 
-G32 <- G32 %>% select(Postcode, all_of(dwelling.perc))
+G32 <- G32 %>% select(Postcode, all_of(dwelling.perc), all_of(dwelling.types), Total.dwelling)
 
 datm <- left_join(datm, G32, by = "Postcode")
 
@@ -249,6 +250,8 @@ dwelling.corr
 #Correlation between language and COVID
 datm <- datm %>% mutate(Lang.NE = Lang_spoken_home_Oth_Lang_P/Tot_P_P)
 
+datm <- datm %>% rename(Population = Tot_P_P)
+
 cor.test(datm$Lang.NE, datm$Cases.per.100K)
 
 
@@ -262,13 +265,11 @@ names(G37)
 
 G37 <- G37 %>% 
   mutate(No.home.access = round(I_NA_Total/Total_Total*100), digits = 3) %>%
-  select(Postcode, No.home.access)
+  select(Postcode, No.home.access, I_NA_Total)
 
 datm <-left_join(datm, G37, by = "Postcode")
 
 cor.test(datm$Cases.per.100K, datm$No.home.access)
-#Test correlations COVID with age, income, household
-cor.test(datm$Cases.per.100K, datm$Median_age_persons)
 
 
 #################
@@ -330,7 +331,7 @@ occupations.corr<- occupations.corr[-1,] %>%
 
 occupations.corr
 
-#############################3
+#############################
 # Read in ABS table G35 Industry of Employment by Age and Sex
 
 G51C <-pc[['G51C']] %>% 
@@ -356,7 +357,7 @@ G51 <-G51 %>%
 
 G51 <-G51 %>% mutate_if(is.numeric, round, digits=3)
 
-G51 <- G51 %>% select(Postcode, all_of(ind.perc))
+G51 <- G51 %>% select(Postcode, all_of(ind), all_of(ind.perc), P_Tot_Tot)
 
 datm <- left_join(datm, G51, by = "Postcode")
 
@@ -381,6 +382,9 @@ industry.corr
 dat <- dat %>% select(-postcode_num_2016,-cent_lat,-cent_long, -Suburb,-`Confirmed cases (ever)`,
                       -`Active cases (current)`)
 
+
 dat_final <- left_join(dat, datm, by = "Postcode")
+
+
 
 saveRDS(dat_final, "Melbourne.spatial.COVID19.RDS")
