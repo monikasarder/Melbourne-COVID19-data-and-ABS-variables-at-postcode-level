@@ -1,4 +1,4 @@
-"Postcode","Exclude","Confirmed cases (ever)","Population","Cases.per.100K","Under.500","Under.500.Percent","Age.15.Over.not.Nil.or.Negative"
+"Postcode","Include","Confirmed cases (ever)","Population","Cases.per.100K","Under.500","Under.500.Percent","Age.15.Over.not.Nil.or.Negative"
 "3000","Yes",90,37975,237,7340,33.4,21977
 "3002","Yes",7,4964,141.02,549,14.4,3812
 "3003","Yes",34,5515,616.5,884,24.33,3633
@@ -55,7 +55,7 @@
 "3059","Yes",77,15466,497.87,3250,32.37,10041
 "3060","Yes",162,14043,1153.6,4134,48.41,8539
 "3061","Yes",14,5056,276.9,1932,60.89,3173
-"3062","No",NA,NA,NA,NA,NA,NA
+"3062","No",0,0,0,0,NA,0
 "3063","No",3,573,523.56,118,33.24,355
 "3064","Yes",671,75457,889.25,16582,37.75,43924
 "3065","Yes",75,10445,718.05,2079,28.29,7348

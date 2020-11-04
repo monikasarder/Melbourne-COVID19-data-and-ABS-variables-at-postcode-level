@@ -1,4 +1,4 @@
-"Postcode","Exclude","Confirmed cases (ever)","Population","Cases.per.100K","Semi.detached","Flat","House","Semi.detached_Percent","Flat_Percent","House_Percent","Total.dwelling"
+"Postcode","Include","Confirmed cases (ever)","Population","Cases.per.100K","Semi.detached","Flat","House","Semi.detached_Percent","Flat_Percent","House_Percent","Total.dwelling"
 "3000","Yes",90,37975,237,68,33473,67,0.199,98.107,0.196,34119
 "3002","Yes",7,4964,141.02,978,2743,366,23.836,66.854,8.92,4103
 "3003","Yes",34,5515,616.5,1232,3276,220,25.937,68.968,4.632,4750
@@ -55,7 +55,7 @@
 "3059","Yes",77,15466,497.87,447,3,14491,2.987,0.02,96.82,14967
 "3060","Yes",162,14043,1153.6,1548,149,11386,11.762,1.132,86.513,13161
 "3061","Yes",14,5056,276.9,207,108,4393,4.273,2.23,90.69,4844
-"3062","No",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"3062","No",0,0,0,0,0,0,NA,NA,NA,0
 "3063","No",3,573,523.56,0,0,552,0,0,100,552
 "3064","Yes",671,75457,889.25,6413,672,65436,8.829,0.925,90.091,72633
 "3065","Yes",75,10445,718.05,2774,4593,1413,31.256,51.752,15.921,8875

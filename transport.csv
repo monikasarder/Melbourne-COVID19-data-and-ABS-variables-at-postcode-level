@@ -1,4 +1,4 @@
-"Postcode","Exclude","Confirmed cases (ever)","Population","Cases.per.100K","Transport_postal_warehouse","Transport_percentage","Employed.15.over"
+"Postcode","Include","Confirmed cases (ever)","Population","Cases.per.100K","Transport_postal_warehouse","Transport_percentage","Employed.15.over"
 "3000","Yes",90,37975,237,360,2.243,16052
 "3002","Yes",7,4964,141.02,71,2.347,3025
 "3003","Yes",34,5515,616.5,96,3.16,3038
@@ -55,7 +55,7 @@
 "3059","Yes",77,15466,497.87,711,9.049,7857
 "3060","Yes",162,14043,1153.6,383,7.758,4937
 "3061","Yes",14,5056,276.9,123,8.554,1438
-"3062","No",NA,NA,NA,NA,NA,NA
+"3062","No",0,0,0,0,NA,0
 "3063","No",3,573,523.56,30,10.714,280
 "3064","Yes",671,75457,889.25,3299,10.648,30981
 "3065","Yes",75,10445,718.05,131,2.414,5427

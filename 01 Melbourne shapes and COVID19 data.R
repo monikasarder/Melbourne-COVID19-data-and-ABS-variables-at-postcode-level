@@ -7,7 +7,7 @@ library(readxl)
 library(googlesheets4)
 
 
-#STEP 01 read 6 August COVID data from Age article by Schneiders and Butt
+#STEP  Read 6 August COVID data from Age article by Butt and Stehle
 #https://www.theage.com.au/national/victoria/victoria-coronavirus-data-find-the-number-of-active-covid-19-cases-in-your-postcode-20200731-p55hg2.html 
 
 butt_url <-"https://docs.google.com/spreadsheets/d/1oxJt0BBPzk-w2Gn1ImO4zASBCdqeeLJRwHEA4DASBFQ/edit#gid=0"
@@ -15,15 +15,12 @@ butt_url <-"https://docs.google.com/spreadsheets/d/1oxJt0BBPzk-w2Gn1ImO4zASBCdqe
 #get sheet information
 ssid <- as_sheets_id(butt_url)
 
-ssid
-
 #read 6 August case data and limit to Melbourne postcodes
 cases <- read_sheet(butt_url, sheet = "Data (August 6)")
 
+#STEP 02 get list of Melb postcodes and suburb names
+#Copypasta from the Butt and Stehle article
 
-#STEP 02 get list of Melb postcodes and names
-#copy and paste postcode list from tradie website https://www.costlessquotes.com.au/
-#This list was chosen for concatenated, reader-friendly suburb names
 melb_names <- read_excel("melbourne.postcode.list.xlsx")
 
 melb_names <- melb_names %>% 

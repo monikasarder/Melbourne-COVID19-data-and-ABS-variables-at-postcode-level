@@ -1,6 +1,4 @@
 library(tidyverse)
-library(sf)
-library(absmapsdata)
 library(plotly)
 library(viridis)
 library(crosstalk)
@@ -10,6 +8,8 @@ library(Hmisc)
 library(readxl)
 library(readr)
 library(repurrrsive)
+library(sf)
+library(rstatix)
 
 ###Load all tables for dataset
 path ="2016_GCP_POA_for_Vic_short-header/2016 Census GCP Postal Areas for VIC"
@@ -32,7 +32,7 @@ pc <-
   map(pc, function(x) 
     map_if(x, is.double, ~as.numeric(.x)))
 
-
+#Postcode columns and names need to match melbourne COVID object
 pc <-
   map(pc, function(x) map_if(x, is.character,
                              ~sub('POA', '', .x)))
@@ -44,8 +44,11 @@ change_names <- function(x) {
 }
 
 pc <- map(pc, ~change_names(.x))
+
+class(pc[['G01']]$Postcode)
   
-#LINK COVID DATA TO ABS DATA elements
+#Read in COVID data from 01 Melbourne shapes and COVID19 data
+
 dat <-readRDS("Melbourne_case_data.RDS")
 
 
@@ -53,15 +56,16 @@ dat <-readRDS("Melbourne_case_data.RDS")
 #Table G01 Selected Person Characteristics by Sex
 
 G01 <-pc[['G01']] %>% 
-  as.data.frame()
+  as.data.frame(stringsAsFactors = FALSE)
 
 #extract variables of interest 
 G01 <- G01 %>%
   select(Postcode, Tot_P_P, Lang_spoken_home_Oth_Lang_P)
 
-#link to dataset
-datm <- left_join(dat, G01, by = "Postcode")
-names(datm)
+#link ABS and COVID objects
+datm <- left_join(dat, G01, by = "Postcode") 
+  
+datm$Suburb <- trimws(datm$Suburb)
 
 #normalise confirmed cases for population size (cases per 100K)
 datm <- datm %>% 
@@ -70,18 +74,26 @@ datm <- datm %>%
 
 datm$Cases.per.100K[is.na(datm$Cases.per.100K)]<-0
 
-#Postcode sizes very variable 
+#Outliers and anomalies. There were a few anomalies for exclusion 
+# Some postcodes had very small populations therefore the numbers were not meaningful (ie Population <1600)
+# Some had been the subject of redevelopment (ie "Plenty","Somerton","Ardeer, Deer Park East")
+# Melbourne University 3010 seasonal population affected by COVID19
 
-#Remove postcodes with small population  
-#datm$Cases.per.100K<-ifelse(datm$Tot_P_P <1500, 0, datm$Cases.per.100K)
 
-#Remove postcodes with recent estates
-#datm$Cases.per.100K <-ifelse(datm$Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"), 0, datm$Cases.per.100K)
+datm$Include <- ifelse(datm$Tot_P_P <1500|datm$Suburb %in% c("Plenty","Ardeer, Deer Park East")|
+           datm$Postcode == "3010", "No","Yes") 
 
-#Clean up names
-datm <- datm %>% mutate(Suburb = str_replace(Suburb, "melbourne","Melbourne"))
 
-#Does it look right
+datm$Reason.Excluded <- "Population under 1500"
+datm$Reason.Excluded[datm$Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East")] <- "Post 2016 development"
+
+datm$Reason.Excluded[datm$Postcode == "3010"] <- "Melbourne Uni"
+
+#Does it look right after normalisation and setting exclusions to zero
+
+vis <- datm
+
+vis$Cases.per.100K <- ifelse(vis$Include == "No", 0, vis$Cases.per.100K)
 
 g <- list(showlegend = FALSE,
           showframe = FALSE,
@@ -89,29 +101,22 @@ g <- list(showlegend = FALSE,
           projection = list(type = 'Mercator')
 )
 
-datm %>%
+
+vis %>%
   plot_geo(split = ~Postcode, showlegend = FALSE, hoverinfo = "text",
            text = ~paste("Area:", Suburb, "<br>","Cases:", Cases.per.100K)) %>%
   add_sf(color = ~Cases.per.100K,
          hoveron = "points+fills") %>%
   layout(geo = g)
 
-#drop geometry
-datm <- st_set_geometry(datm, NULL)
-
-#Remove postcodes with recent estates
-#datm <-ifelse(datm$Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"), 0, datm$Cases.per.100K)
 
 
-datm <- datm %>% 
-  filter(Tot_P_P!=0)
-ggplot(datm, aes(x = reorder(Postcode, -Cases.per.100K), y = Cases.per.100K)) +
+#Does the bar chart make sense
+ggplot(vis, aes(x = reorder(Postcode, -Cases.per.100K), y = Cases.per.100K)) +
   geom_bar(stat = "identity")
 
-#remove extreme values
-#datm <-datm %>%
-#  filter(!Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"))
-
+#drop sf features, we no longer need them
+datm <- st_set_geometry(datm, NULL)
 
 #################
 # Read in ABS table G17 Total Personal Income (Weekly) by Age by Sex
@@ -135,7 +140,7 @@ G17C <- G17C %>% select(Postcode,P_1000_1249_Tot, P_1250_1499_Tot,P_1500_1749_To
 
 G17 <- left_join(G17B, G17C, by  = "Postcode")
 
-#Below poverty line taken as below $500 per week. 
+#Below poverty line taken as below $500 per week in 2016
 #Not stated income and negative income excluded (potentially wealthy retirees etc - unclear if relectance is due to above or below)
 G17 <- G17 %>%
   mutate(Low.income = P_1_149_Tot +P_150_299_Tot + P_300_399_Tot + P_400_499_Tot) %>%
@@ -146,8 +151,9 @@ G17 <- G17 %>% select(Postcode, Percent.poverty, Low.income, Total_included_inco
 
 datm <- left_join(datm, G17, by = "Postcode")
 
-
-cor.test(datm$Cases.per.100K, datm$Percent.poverty)
+datm %>%
+  filter(Include == "No") %>%
+  cor_test(Cases.per.100K, Percent.poverty)
 
 
 
@@ -181,6 +187,7 @@ datm <- left_join(datm, G33, by = "Postcode")
 
 #create correlation matrix
 tenure.table <- datm %>% 
+  filter(Include == "Yes") %>%
   select(Cases.per.100K, all_of(tenure.perc)) %>%
   na.omit() %>%
   as.matrix()%>%
@@ -232,6 +239,7 @@ datm <- left_join(datm, G32, by = "Postcode")
 
 #create correlation matrix
 dwelling.table <- datm %>% 
+  filter(Include == "Yes") %>%
   select(Cases.per.100K, all_of(dwelling.perc)) %>%
   na.omit() %>%
   as.matrix() %>%
@@ -252,7 +260,10 @@ datm <- datm %>% mutate(Lang.NE = Lang_spoken_home_Oth_Lang_P/Tot_P_P)
 
 datm <- datm %>% rename(Population = Tot_P_P)
 
-cor.test(datm$Lang.NE, datm$Cases.per.100K)
+
+datm %>%
+  filter(Include == "Yes") %>%
+  cor_test(Lang.NE, Cases.per.100K)
 
 
 #######################
@@ -269,7 +280,9 @@ G37 <- G37 %>%
 
 datm <-left_join(datm, G37, by = "Postcode")
 
-cor.test(datm$Cases.per.100K, datm$No.home.access)
+datm %>%
+  filter(Include == "Yes") %>%
+  cor_test(Cases.per.100K, No.home.access)
 
 
 #################
@@ -283,11 +296,17 @@ datm <-left_join(datm, G02, by = "Postcode")
 
 
 #Test correlations COVID with age, income, household
-cor.test(datm$Cases.per.100K, datm$Median_age_persons)
+datm %>%
+  filter(Include == "Yes") %>%
+  cor_test(Cases.per.100K, Median_age_persons)
 
-cor.test(datm$Cases.per.100K, datm$Median_tot_hhd_inc_weekly)
+datm %>%
+  filter(Include == "Yes") %>%
+  cor_test(Cases.per.100K, Median_tot_hhd_inc_weekly)
 
-cor.test(datm$Cases.per.100K, datm$Average_household_size)
+datm %>%
+  filter(Include == "Yes") %>%
+  cor_test(Cases.per.100K, Average_household_size)
 
 
 
@@ -318,6 +337,7 @@ datm <- left_join(datm, G53B, by = "Postcode")
 
 #create correlation matrix
 occupations.table <- datm %>% 
+  filter(Include == "Yes") %>%
   select(Cases.per.100K, all_of(occupations.perc)) %>%
   na.omit() %>%
   as.matrix()%>%
@@ -363,6 +383,7 @@ datm <- left_join(datm, G51, by = "Postcode")
 
 #create correlation matrix
 industry.table <- datm %>% 
+  filter(Include == "Yes") %>%
   select(Cases.per.100K, all_of(ind.perc)) %>%
   na.omit() %>%
   as.matrix()%>%

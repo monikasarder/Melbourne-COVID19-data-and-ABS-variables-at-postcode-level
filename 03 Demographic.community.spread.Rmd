@@ -12,44 +12,6 @@ tags:
 draft: no  
 
 ---
-
-Melbourne’s second wave, which commenced in June and peaked in the first week of August, was driven primarily by community transmission. New outbreaks throughout this period have tended to arise in workplaces, flowing through to families and communities (Source: [DHHS](https://www.dhhs.vic.gov.au/coronavirus-update-victoria-07-september-2020)).   
-
-The highly localised nature of the second wave led to experimentation with a Postcode-based lockdown in July. This was quickly abandoned in favour of a city-wide lockdown. However, it is clear that geography, and geospatial characteristics, have an effect on the [rate of virus transmission](https://www.covid19data.com.au/victoria).  
-
-This social and economic reality was notably absent from the [modelling](https://www.mja.com.au/journal/2020/probability-6-week-lockdown-victoria-commencing-9-july-2020-achieving-elimination) that informed Melbourne’s roadmap out of lockdown. The model assumed identical features across postcodes, that all cases of COVID19 in the community were randomly distributed, and that all cases are mixing in the community in the same way.   
-
-In order to achieve a successful COVID19 endgame, we need to identify the actual community characteristics that are correlated with high rates of transmission. A detailed understanding of the reality of the city, has informational value relevant to both the modelling, and the public health response.
-
-The final dataset comprises 223 Melbourne postcodes.^[Twenty-three of the postcodes were removed from the dataset because the population was too small to be meaningful (<1500 residents), or because an area had undergone a major redevelopment since the Census was undertaken, and the data no longer reflected the population.] 
-
-# Data in this study
-
-The [ABS 2016 Census of Population and Housing](https://datapacks.censusdata.abs.gov.au/geopackages/) contains rich information on a range of community characteristics. Statistical analysis was undertaken of the relationship between key features and the level of COVID19 infection in various postcodes (ie number of confirmed cases per 100K) at the peak of the wave on 6 August.
-
-The following characteristics showed positive and statistically significant relationships between COVID19 infection levels and the proportion of residents:  
-
-*  living below the poverty line  
-*  living in rental properties  
-*  living in a home without an internet connection  
-*  speaking a language other than English in the home  
-*  living in a flat or semi-detached home (cf a detached house)  
-*  working in the transport industry; and  
-*  who are below the median age
-
-**A note on interpretation**
-
-A positive statistical correlation indicates that when we see an increase in one characteristic (eg number of rental households), we can expect the other characteristic (ie COVID19 cases) to increase as well.  An important caveat to readers, is that such a relationship does not constitute ‘proof’ that one thing causes another, merely that something connects them. 
-
-For example, the number of ice creams sold per day may be positively correlated with the number of beach lifesaver rescues. This does not mean however, that ice-creams are causing people to get into trouble in the water.
-
-Statisticians deal with the relationships, or patterns, between observable and measurable phenomena. When you are dealing with the statistics of human behaviour (ie in this case in relation to a public health crisis and highly transmissible virus), there is always more to the story, more questions to ask, more to uncover. Statistics cannot provide you with a perfect answer, but it can show you where to look to uncover a better answer than the one you already have. 
-
-# Geographical concentration of COVID19
-
-At the peak of the second wave the number of confirmed cases per 100K of population was significantly higher in Melbourne’s North and West than in other parts of the city.
-
-**Figure 1 Confirmed cases per 100K by Postcode on 6 August**
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, out.width = "100%")
 
@@ -67,21 +29,59 @@ library(absmapsdata)
 library(viridis)
 all <- readRDS("Melbourne.spatial.COVID19.RDS")
 
+exclusion.list <- all %>% 
+  st_set_geometry( NULL) %>%
+  filter(Include == "No") %>%
+  select(Postcode, Suburb, Population)
+
+write.csv(exclusion.list, "exclusion.list.csv", row.names = FALSE)
 
 ```
+Melbourne’s second wave, which commenced in June and peaked in the first week of August, was driven primarily by community transmission. New outbreaks throughout this period have tended to arise in workplaces, flowing through to families and communities (Source: [DHHS](https://www.dhhs.vic.gov.au/coronavirus-update-victoria-07-september-2020)).   
+
+The highly localised nature of the second wave led to experimentation with a Postcode-based lockdown in July. This was quickly abandoned in favour of a city-wide lockdown. However, it is clear that geography, and geospatial characteristics, have an effect on the [rate of virus transmission](https://www.covid19data.com.au/victoria).  
+
+This social and economic reality was notably absent from the [modelling](https://www.mja.com.au/journal/2020/probability-6-week-lockdown-victoria-commencing-9-july-2020-achieving-elimination) that informed Melbourne’s roadmap out of lockdown. The model assumed identical features across postcodes, that all cases of COVID19 in the community were randomly distributed, and that all cases are mixing in the community in the same way.   
+
+In order to achieve a successful COVID19 endgame, we need to identify the actual community characteristics that are correlated with high rates of transmission. A detailed understanding of the reality of the city, has informational value relevant to both the modelling, and the public health response.
+
+The final dataset comprises 222 Melbourne postcodes.^[Twenty-four of the postcodes were removed from the dataset because the population was too small to be meaningful (<1500 residents), or because an area had undergone a major redevelopment since the Census was undertaken, and the data no longer reflected the population. Excluded postcodes and reasons for exclusion are listed `r xfun::embed_files('exclusion.list.csv', text = "here")`] 
+
+# Data in this study
+
+The [ABS 2016 Census of Population and Housing](https://datapacks.censusdata.abs.gov.au/geopackages/) contains rich information on a range of community characteristics. Statistical analysis was undertaken of the relationship between key features and the level of COVID19 infection in various postcodes (ie number of confirmed cases per 100K) at the peak of the wave on 6 August.
+
+The following characteristics showed positive and statistically significant relationships between COVID19 infection levels and the proportion of residents:  
+
+*  working in the transport industry; and  
+*  who are below the median age
+*  living below the poverty line  
+*  living in rental properties  
+*  living in a flat or semi-detached home (cf a detached house) 
+*  living in a home without an internet connection  
+*  speaking a language other than English in the home  
+ 
+**A note on interpretation**
+
+A positive statistical correlation indicates that when we see an increase in one characteristic (eg number of rental households), we can expect the other characteristic (ie COVID19 cases) to increase as well.  An important caveat to readers, is that such a relationship does not constitute ‘proof’ that one thing causes another, merely that something connects them. 
+
+For example, the number of ice creams sold per day may be positively correlated with the number of beach lifesaver rescues. This does not mean however, that ice-creams are causing people to get into trouble in the water.
+
+Statisticians deal with the relationships, or patterns, between observable and measurable phenomena. When you are dealing with the statistics of human behaviour (ie in this case in relation to a public health crisis and highly transmissible virus), there is always more to the story, more questions to ask, more to uncover. Statistics cannot provide you with a perfect answer, but it can show you where to look to uncover a better answer than the one you already have. 
+
+# Geographical concentration of COVID19
+
+At the peak of the second wave the number of confirmed cases per 100K of population was significantly higher in Melbourne’s North and West than in other parts of the city.
+
+**Figure 1 Confirmed cases per 100K by Postcode on 6 August**
 
 ```{r choropleth creation, echo = FALSE, warning = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, out.width = "100%")
 
 
-pop.poa <- all %>% select(Postcode, Suburb, Population, Cases.per.100K, `Confirmed cases (ever)` )
+vis <- all %>% select(Postcode, Suburb, Population, Cases.per.100K, `Confirmed cases (ever)`, Include )
 
-#Set small pop postcodes to 0
-pop.poa$Cases.per.100K<-ifelse(pop.poa$Population <1500, 0, pop.poa$Cases.per.100K)
-
-#Set postcodes with recent estates to 0
-pop.poa$Cases.per.100K <-ifelse(pop.poa$Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East","University Of Melbourne"), 0,
-                                pop.poa$Cases.per.100K)
+vis$Cases.per.100K <- ifelse(vis$Include == "No", 0, vis$Cases.per.100K)
 
 g <- list(showlegend = FALSE,
           showframe = FALSE,
@@ -90,7 +90,7 @@ g <- list(showlegend = FALSE,
 )
 
 
-geospatial.plot <-pop.poa %>%
+geospatial.plot <-vis %>%
   plot_geo(split = ~Postcode, showlegend = FALSE, hoverinfo = "text", color = ~Cases.per.100K, 
            colors = viridis_pal(option = "B")(30),
            text = ~paste("Postcode:", Postcode, 
@@ -127,19 +127,21 @@ create_dt <- function(x, pl){
 
 ```{r list data, echo = FALSE, warning = FALSE}
 
-dat <- st_set_geometry(all, NULL)
+all <- st_set_geometry(all, NULL)
 
-dat <-dat %>% filter(!Population <1500, !Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East"),
-                     !Postcode %in% c("3062","3010"))
-
-
-main.table<- dat %>%
-  select(Postcode, Suburb,`Confirmed cases (ever)`, Population, Cases.per.100K) %>%
+main.table<- all %>%
+  select(Postcode, Suburb,`Confirmed cases (ever)`, Population, Cases.per.100K, Include) %>%
   arrange(desc(`Confirmed cases (ever)`))
 
-names(main.table)<-c("Postcode","Suburb","Confirmed 6 Aug","Pop","Cases per 100K")
+names(main.table)<-c("Postcode","Suburb","Confirmed 6 Aug","Pop","Cases per 100K","Included")
 
 create_dt(main.table, pl = 10)
+```
+
+```{r filter excluded, echo = FALSE, warning = FALSE}
+
+dat <- all %>% filter(Include  == "Yes")
+
 ```
 
 # COVID19 and resident activities  
@@ -157,9 +159,9 @@ Several academics have called for a Postcode-based easing of restrictions, refer
 
 This kind of a analysis ignores key variables. A more holistic approach involves looking at what community members actually do, and how this predicates movement.
 
-Occupation data reveals that a relatively high proportion of community members in COVID19 hotspots work in the transport industry. It should come as no surprise that communities that are home to individuals involved in moving freight, goods, warehousing and delivering shopping and takeaway, should be linked to COVID19 risk. The correlation of the percentage of employed persons working in transports and COVID19 is quite high, at `r round(transport.cor$estimate, digits = 3)` (p-value = `r round(transport.cor$p.value, digits = 3)`). 
+Occupation data reveals that a relatively high proportion of community members in COVID19 hotspots work in the transport industry. It should come as no surprise that communities that are home to individuals involved in moving freight, goods, warehousing and delivering shopping and takeaway, should be linked to COVID19 risk. The correlation of the percentage of employed persons working in transports and COVID19 is quite high, at `r round(transport.cor$estimate, digits = 3)` (p-value = <0.000). 
 
-In terms of demographics, the median age of community members is also strongly, and significantly, correlated with COVID19, at `r round(age.cor$estimate, digits = 3)` (p-value = `r round(age.cor$p.value, digits = 3)`). That is, communities that skew younger have higher rates of infection. This makes sense, as younger community members are more likely to have multiple responsibilities, such as working, caring for children, caring for parents etc. These responsibilities involve both cross-city movement and interpersonal contact. 
+In terms of demographics, the median age of community members is also strongly, and significantly, correlated with COVID19, at `r round(age.cor$estimate, digits = 3)` (p-value = <0.000). That is, communities that skew younger have higher rates of infection. This makes sense, as younger community members are more likely to have multiple responsibilities, such as working, caring for children, caring for parents etc. These responsibilities involve both cross-city movement and interpersonal contact. 
 
 Premier Daniel Andrews rightly and sensibly rejected a return to Postcode-based approaches at the start of September, stating that essential ["workers live in families"](https://www.youtube.com/watch?v=NBiqRkW_q6k&t=1s&ab_channel=ABCNews%28Australia%29), need to travel and therefore, functional isolation is not possible.
 
@@ -214,7 +216,7 @@ poverty.cor <- cor.test(dat$Percent.poverty, dat$Cases.per.100K)
 rental.cor <- cor.test(dat$R_Tot_Total_Percent, dat$Cases.per.100K)
 ```
 
-A positive correlation was identified between the percentage of residents whose personal income is less than \$500 per week and COVID19 cases, with a correlation of `r round(poverty.cor$estimate, digits = 3)` (p-value = `r round(poverty.cor$p.value, digits = 3)`).  
+A positive correlation was identified between the percentage of residents whose personal income is less than \$500 per week and COVID19 cases, with a correlation of `r round(poverty.cor$estimate, digits = 3)` (p-value = <0.000).  
 
 This correlation is deeply concerning, given that Federal JobSeeker and JobKeeper rates are due to fall dramatically later this month, pushing more than [100,000 Victorians below the poverty line](https://www.tai.org.au/content/jobseeker-cut-push-370000-poverty-including-80000-children) (defined at [$457](https://newsroom.unsw.edu.au/news/social-affairs/unsw-and-acoss-report-shows-3m-australians-living-poverty#:~:text=The%202020%20Poverty%20in%20Australia,week%20for%20a%20single%20adult.) per week). Coupled with the lack of Paid Pandemic Leave for all workers, increased financial pressure on essential workers to make ends meet, could undermine efforts to stop the spread.
 
@@ -423,8 +425,6 @@ The prevalence of transport work is also an important characteristic, since move
 #  Data downloads 
 ```{r data downloads, echo = FALSE, warnings = FALSE}
 
-all <- st_set_geometry(all, NULL)
-
 #make sure exclusions are noted
 exclude <- all %>% 
   filter(Population <1500|Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East")|
@@ -435,7 +435,7 @@ exclude <- all %>%
 all <- all %>% 
   mutate(Exclude = ifelse(Postcode %in% exclude$Postcode, "No","Yes"))
 
-standard <-c('Postcode','Exclude','Confirmed cases (ever)', 'Population','Cases.per.100K')
+standard <-c('Postcode','Include','Confirmed cases (ever)', 'Population','Cases.per.100K')
 
 transport <- all %>% 
   select(all_of(standard), P_Trans_post_wrehsg_Tot, P_Trans_post_wrehsg_Tot_Percent, P_Tot_Tot) %>%

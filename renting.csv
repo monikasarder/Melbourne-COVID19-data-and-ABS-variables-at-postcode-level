@@ -1,4 +1,4 @@
-"Postcode","Exclude","Confirmed cases (ever)","Population","Cases.per.100K","Total.Rented","Total.Rented.Percent","Total.Occupied.Dwellings"
+"Postcode","Include","Confirmed cases (ever)","Population","Cases.per.100K","Total.Rented","Total.Rented.Percent","Total.Occupied.Dwellings"
 "3000","Yes",90,37975,237,11710,70.242,16671
 "3002","Yes",7,4964,141.02,1178,54.211,2173
 "3003","Yes",34,5515,616.5,1298,62.135,2089
@@ -55,7 +55,7 @@
 "3059","Yes",77,15466,497.87,387,8.681,4458
 "3060","Yes",162,14043,1153.6,1306,28.951,4511
 "3061","Yes",14,5056,276.9,386,24.871,1552
-"3062","No",NA,NA,NA,NA,NA,NA
+"3062","No",0,0,0,0,NA,0
 "3063","No",3,573,523.56,18,10.909,165
 "3064","Yes",671,75457,889.25,5185,24.745,20954
 "3065","Yes",75,10445,718.05,2537,61.443,4129

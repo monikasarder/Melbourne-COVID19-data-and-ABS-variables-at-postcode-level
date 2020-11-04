@@ -1,4 +1,4 @@
-"Postcode","Exclude","Confirmed cases (ever)","Population","Cases.per.100K","Median_age_persons"
+"Postcode","Include","Confirmed cases (ever)","Population","Cases.per.100K","Median_age_persons"
 "3000","Yes",90,37975,237,26
 "3002","Yes",7,4964,141.02,38
 "3003","Yes",34,5515,616.5,30
@@ -55,7 +55,7 @@
 "3059","Yes",77,15466,497.87,34
 "3060","Yes",162,14043,1153.6,34
 "3061","Yes",14,5056,276.9,36
-"3062","No",NA,NA,NA,NA
+"3062","No",0,0,0,0
 "3063","No",3,573,523.56,42
 "3064","Yes",671,75457,889.25,30
 "3065","Yes",75,10445,718.05,33
