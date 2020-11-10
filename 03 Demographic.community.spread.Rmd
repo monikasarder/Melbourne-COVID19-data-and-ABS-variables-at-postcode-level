@@ -25,7 +25,6 @@ library(DT)
 library(RColorBrewer)
 library(downloadthis)
 library(sf)
-library(absmapsdata)
 library(viridis)
 all <- readRDS("Melbourne.spatial.COVID19.RDS")
 

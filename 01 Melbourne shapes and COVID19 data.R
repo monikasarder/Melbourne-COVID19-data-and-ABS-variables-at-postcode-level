@@ -7,6 +7,7 @@ library(readxl)
 library(googlesheets4)
 
 
+
 #STEP  Read 6 August COVID data from Age article by Butt and Stehle
 #https://www.theage.com.au/national/victoria/victoria-coronavirus-data-find-the-number-of-active-covid-19-cases-in-your-postcode-20200731-p55hg2.html 
 
@@ -21,13 +22,15 @@ cases <- read_sheet(butt_url, sheet = "Data (August 6)")
 #STEP 02 get list of Melb postcodes and suburb names
 #Copypasta from the Butt and Stehle article
 
-melb_names <- read_excel("melbourne.postcode.list.xlsx")
-
+melb_names <- read.csv("melbourne.postcode.list.csv", stringsAsFactors = FALSE)
+library(stringi)
+#Make suburb names more readable
 melb_names <- melb_names %>% 
   mutate(Postcode = as.character(Postcode)) %>%
-  rename( Suburb = `City/ Town`) %>%
+  rename(Suburb = City..Town) %>%
+ mutate(Suburb = iconv(Suburb, 'utf-8', 'ascii', sub=' ')) %>%
   filter(!Postcode %in% c("Unknown","Others")) %>%
-  mutate(Suburb = str_replace(Suburb, "melbourne","Melbourne")) %>%
+  mutate(Suburb = str_replace_all(Suburb, "melbourne","Melbourne")) %>%
   select(-State, -District)
 
 #STEP 03 extract shapes from absmaps
@@ -70,4 +73,3 @@ dat %>%
 
 saveRDS(dat, "Melbourne_case_data.RDS")
 
-head(dat)
