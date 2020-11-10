@@ -22,7 +22,7 @@ This script will enable you to read in COVID19 Date at postcode level, match pos
 
 The plot is not meaningful story as the cumulative case numbers have not yet been rationalised for population, however it should appear as follows
 
-![](Melbourne_plot.jpg)
+![](Melbourne_plot.JPG)
 
 The completed COVID19 dataset for Melbourne on 6 August 2020 is stored in **Melbourne_case_data.RDS**.
 
