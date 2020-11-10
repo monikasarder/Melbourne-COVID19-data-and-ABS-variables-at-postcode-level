@@ -22,7 +22,7 @@ This script will enable you to read in COVID19 Date at postcode level, match pos
 
 The plot is not meaningful story as the cumulative case numbers have not yet been rationalised for population, however it should appear as follows
 
-![](Melbourne plot.png)
+![](Melbourne_plot.png)
 
 The completed COVID19 dataset for Melbourne on 6 August 2020 is stored in **Melbourne_case_data.RDS**.
 
@@ -57,17 +57,5 @@ COVID19 data and normalised variables along with spatial information are saved i
 ## 03 Demographic.community.spread.Rmd  
 
 This Rmarkdown script reproduces the data blog post at Deploy the data entitled [Postcode characteristics of Melbourne's COVID19 hotspots](https://www.deploythedata.com/2020/09/11/postcode-characteristics-of-melbournes-covid19-hotspots/).  All of the data needed for telling our story is now in **Melbourne.spatial.COVID19.RDS**. 
-
-The following. The following characteristics showed positive and statistically significant relationships between COVID19 infection levels and the proportion of residents:
-
-*  working in the transport industry; 
-*  who are below the median age
-*  living below the poverty line  
-*  living in rental properties 
-*  living in a home without an internet connection 
-*  speaking a language other than English in the home 
-*  living in a flat or semi-detached home (cf a detached house) 
-
-The policy implications are discussed and .csv files are created for download by interested parties.
 
 Please let me know if you have any questions or improvements at monikasarder@gmail.com . 
