@@ -70,3 +70,14 @@ dat %>%
   layout(geo = g)
 
 saveRDS(dat, "Melbourne_case_data.RDS")
+
+# Download ABS Census postcode level data from the ABS website.
+# The following options were selected from https://datapacks.censusdata.abs.gov.au/datapacks/:
+#  2016 Census Datapacks > General Community > Profile > Postal Areas > Vic
+
+temp <- tempfile()
+"https://www.censusdata.abs.gov.au/CensusOutput/copsubdatapacks.nsf/All%20docs%20by%20catNo/2016_GCP_POA_for_Vic/$File/2016_GCP_POA_for_Vic_short-header.zip?OpenElement&key=ee324574-4a37-9d0e-b6ff-66e2d667a73f" %>%
+  download.file(temp)
+unzip(temp, exdir = "./2016_GCP_POA_for_Vic_short-header")
+unlink(temp)
+
