@@ -10,8 +10,8 @@ tags:
   - Melbourne lockdown
   - JobSeeker
 draft: no  
-
 ---
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, out.width = "100%")
 
@@ -28,14 +28,14 @@ library(sf)
 library(viridis)
 all <- readRDS("Melbourne.spatial.COVID19.RDS")
 
-exclusion.list <- all %>% 
-  st_set_geometry( NULL) %>%
+exclusion.list <- all %>%
+  st_set_geometry(NULL) %>%
   filter(Include == "No") %>%
   select(Postcode, Suburb, Population)
 
 write.csv(exclusion.list, "exclusion.list.csv", row.names = FALSE)
-
 ```
+
 Melbourne’s second wave, which commenced in June and peaked in the first week of August, was driven primarily by community transmission. New outbreaks throughout this period have tended to arise in workplaces, flowing through to families and communities (Source: [DHHS](https://www.dhhs.vic.gov.au/coronavirus-update-victoria-07-september-2020)).   
 
 The highly localised nature of the second wave led to experimentation with a Postcode-based lockdown in July. This was quickly abandoned in favour of a city-wide lockdown. However, it is clear that geography, and geospatial characteristics, have an effect on the [rate of virus transmission](https://www.covid19data.com.au/victoria).  
@@ -77,30 +77,32 @@ At the peak of the second wave the number of confirmed cases per 100K of populat
 ```{r choropleth creation, echo = FALSE, warning = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, out.width = "100%")
 
+vis <- all %>%
+  select(Postcode, Suburb, Population, Cases.per.100K, Confirmed, Include) %>%
+  mutate(Cases.per.100K = ifelse(Include == "No", 0, Cases.per.100K))
 
-vis <- all %>% select(Postcode, Suburb, Population, Cases.per.100K, `Confirmed cases (ever)`, Include )
-
-vis$Cases.per.100K <- ifelse(vis$Include == "No", 0, vis$Cases.per.100K)
-
-g <- list(showlegend = FALSE,
-          showframe = FALSE,
-          showcoastlines = FALSE,
-          projection = list(type = 'Mercator')
+g <- list(
+  showlegend = FALSE,
+  showframe = FALSE,
+  showcoastlines = FALSE,
+  projection = list(type = "Mercator")
 )
 
-
-geospatial.plot <-vis %>%
-  plot_geo(split = ~Postcode, showlegend = FALSE, hoverinfo = "text", color = ~Cases.per.100K, 
-           colors = viridis_pal(option = "B")(30),
-           text = ~paste("Postcode:", Postcode, 
-                          "<br>","Suburb:", Suburb,
-                         "<br>","Cases per 100K:", Cases.per.100K,
-                         "<br>","All cases 6 Aug:", `Confirmed cases (ever)`
-                         )) %>%
+geospatial.plot <- vis %>%
+  plot_geo(
+    split = ~Postcode, showlegend = FALSE, hoverinfo = "text", color = ~Cases.per.100K,
+    colors = viridis_pal(option = "B")(30),
+    text = ~ paste(
+      "Postcode:", Postcode,
+      "<br>", "Suburb:", Suburb,
+      "<br>", "Cases per 100K:", Cases.per.100K,
+      "<br>", "All cases 6 Aug:", Confirmed
+    )
+  ) %>%
   add_sf() %>%
   layout(geo = g)
 
-colorbar(geospatial.plot, len = 0.4, title = "Cases per 100K 6 Aug")  
+colorbar(geospatial.plot, len = 0.4, title = "Cases per 100K 6 Aug")
 ```
 
 <font size="2">**Sources: [DHHS](https://www.theage.com.au/national/victoria/victoria-coronavirus-data-find-out-how-active-case-numbers-have-changed-in-your-postcode-in-the-past-week-20200806-p55j9n.html); 2016 Census - [Selected Medians and Averages; Industry of Employment by Occupation](https://datapacks.censusdata.abs.gov.au/geopackages/)**</font>
@@ -108,39 +110,39 @@ colorbar(geospatial.plot, len = 0.4, title = "Cases per 100K 6 Aug")
 A full list of Melbourne postcodes, COVID19 cases and Population data appears below.
 
 **Table 1 COVID19 confirmed cases 6 August and population by Postcode**
+
 ```{r list function, echo = FALSE, warning = FALSE}
-
-
-create_dt <- function(x, pl){
-  DT::datatable(x, rownames = FALSE,
-                extensions = c('Buttons'),
-                options = list(scrollX = TRUE, pageLength = pl,dom = 'Blfrtip',
-                               buttons = c('copy', 'csv', 'excel')))
+create_dt <- function(x, pl) {
+  DT::datatable(x,
+    rownames = FALSE,
+    extensions = c("Buttons"),
+    options = list(
+      scrollX = TRUE, pageLength = pl, dom = "Blfrtip",
+      buttons = c("copy", "csv", "excel")
+    )
+  )
 }
-
-
-
-
 ```
 
 
 ```{r list data, echo = FALSE, warning = FALSE}
+all <- all %>% st_set_geometry(NULL)
 
-all <- st_set_geometry(all, NULL)
-
-main.table<- all %>%
-  select(Postcode, Suburb,`Confirmed cases (ever)`, Population, Cases.per.100K, Include) %>%
-  arrange(desc(`Confirmed cases (ever)`))
-
-names(main.table)<-c("Postcode","Suburb","Confirmed 6 Aug","Pop","Cases per 100K","Included")
+main.table <- all %>%
+  select(Postcode, Suburb, Confirmed, Population, Cases.per.100K, Include) %>%
+  arrange(desc(Confirmed)) %>%
+  rename(
+    `Confirmed 6 Aug` = Confirmed,
+    Pop = Population,
+    `Cases per 100K` = Cases.per.100K,
+    Included = Include
+  )
 
 create_dt(main.table, pl = 10)
 ```
 
 ```{r filter excluded, echo = FALSE, warning = FALSE}
-
-dat <- all %>% filter(Include  == "Yes")
-
+dat <- all %>% filter(Include == "Yes")
 ```
 
 # COVID19 and resident activities  
@@ -148,7 +150,6 @@ dat <- all %>% filter(Include  == "Yes")
 
 
 ```{r age and transport, echo = FALSE, warning = FALSE}
-
 age.cor <- cor.test(dat$Median_age_persons, dat$Cases.per.100K)
 
 transport.cor <- cor.test(dat$P_Trans_post_wrehsg_Tot_Percent, dat$Cases.per.100K)
@@ -165,51 +166,53 @@ In terms of demographics, the median age of community members is also strongly, 
 Premier Daniel Andrews rightly and sensibly rejected a return to Postcode-based approaches at the start of September, stating that essential ["workers live in families"](https://www.youtube.com/watch?v=NBiqRkW_q6k&t=1s&ab_channel=ABCNews%28Australia%29), need to travel and therefore, functional isolation is not possible.
 
 **Figure 5 COVID19 against age and work - by Postcode**
+
 ```{r age and transport vis, echo = FALSE, warning = FALSE}
-
-fit.age = lm(Cases.per.100K ~ Median_age_persons, data = dat)
+fit.age <- lm(Cases.per.100K ~ Median_age_persons, data = dat)
 p1 <- dat %>%
-  plot_ly(x = ~Median_age_persons, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "Median age:",Median_age_persons)) %>%
-  add_markers(name = ~ "Median age") %>%
-  add_lines(x = ~Median_age_persons, y = ~ fitted(fit.age),  showlegend = F)
+  plot_ly(
+    x = ~Median_age_persons, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "Median age:", Median_age_persons
+    )
+  ) %>%
+  add_markers(name = ~"Median age") %>%
+  add_lines(x = ~Median_age_persons, y = ~ fitted(fit.age), showlegend = F)
 
-
-
-fit.transport = lm(Cases.per.100K ~ P_Trans_post_wrehsg_Tot_Percent, data = dat)
+fit.transport <- lm(Cases.per.100K ~ P_Trans_post_wrehsg_Tot_Percent, data = dat)
 
 p2 <- dat %>%
-  plot_ly(x = ~ P_Trans_post_wrehsg_Tot_Percent, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "(%) Employed transport:", P_Trans_post_wrehsg_Tot_Percent)) %>%
-  add_markers(name = ~ "(%) Employed transport") %>%
+  plot_ly(
+    x = ~P_Trans_post_wrehsg_Tot_Percent, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "(%) Employed transport:", P_Trans_post_wrehsg_Tot_Percent
+    )
+  ) %>%
+  add_markers(name = ~"(%) Employed transport") %>%
   add_lines(x = ~P_Trans_post_wrehsg_Tot_Percent, y = ~ fitted(fit.transport), showlegend = F)
 
-
-
-plotly::subplot(p2, p1, nrows = 1)%>%
-layout(yaxis = list(title = 'Cases per 100K', range = c(0, 1790)),
-       yaxis2 = list(range = c(0, 1790)),
-xaxis2 = list(title = 'Median age'),
-xaxis = list(title = '(%) Transport'))
-
+plotly::subplot(p2, p1, nrows = 1) %>%
+  layout(
+    yaxis = list(title = "Cases per 100K", range = c(0, 1790)),
+    yaxis2 = list(range = c(0, 1790)),
+    xaxis2 = list(title = "Median age"),
+    xaxis = list(title = "(%) Transport")
+  )
 ```
 
 <font size="2">**Source: 2016 Census - [Selected Medians and Averages; Industry of Employment by Occupation](https://datapacks.censusdata.abs.gov.au/geopackages/)**</font>  
 
 # COVID19 and security of housing and income support  
 
-
-
 ```{r housing and poverty, echo = FALSE, warning = FALSE}
-
 poverty.cor <- cor.test(dat$Percent.poverty, dat$Cases.per.100K)
 
 rental.cor <- cor.test(dat$R_Tot_Total_Percent, dat$Cases.per.100K)
@@ -228,39 +231,44 @@ Policy measures such as eviction moratoriums, rent relief, and longer term inves
 **Figure 2 COVID19 against rent, income - by Postcode**
 
 ```{r housing and poverty vis, echo = FALSE, warnings = FALSE}
-
-
-fit.perc = lm(Cases.per.100K ~ Percent.poverty, data = dat)
+fit.perc <- lm(Cases.per.100K ~ Percent.poverty, data = dat)
 
 p1 <- dat %>%
-  plot_ly(x = ~Percent.poverty, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "Percentage under 500:",Percent.poverty)) %>%
-  add_markers(name = ~ "(%) Under $500 ") %>%
-  add_lines(x = ~Percent.poverty, y = ~ fitted(fit.perc),  showlegend = F)
+  plot_ly(
+    x = ~Percent.poverty, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "Percentage under 500:", Percent.poverty
+    )
+  ) %>%
+  add_markers(name = ~"(%) Under $500 ") %>%
+  add_lines(x = ~Percent.poverty, y = ~ fitted(fit.perc), showlegend = F)
 
-
-fit.rent = lm(Cases.per.100K ~ R_Tot_Total_Percent, data = dat)
+fit.rent <- lm(Cases.per.100K ~ R_Tot_Total_Percent, data = dat)
 
 p2 <- dat %>%
-  plot_ly(x = ~R_Tot_Total_Percent, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "(%) Rental:", R_Tot_Total_Percent)) %>%
-  add_markers(name = ~ "(%) Rental") %>%
+  plot_ly(
+    x = ~R_Tot_Total_Percent, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "(%) Rental:", R_Tot_Total_Percent
+    )
+  ) %>%
+  add_markers(name = ~"(%) Rental") %>%
   add_lines(x = ~R_Tot_Total_Percent, y = ~ fitted(fit.rent), showlegend = F)
 
-
-plotly::subplot(p1, p2, nrows = 1)%>%
-layout(yaxis = list(title = 'Cases per 100K'),
-xaxis = list(title = '(%) Under $500'),
-xaxis2 = list(title = '(%) Rental'))
-
+plotly::subplot(p1, p2, nrows = 1) %>%
+  layout(
+    yaxis = list(title = "Cases per 100K"),
+    xaxis = list(title = "(%) Under $500"),
+    xaxis2 = list(title = "(%) Rental")
+  )
 ```
  <font size="2"> **Source: 2016 Census - [Total Personal Income (Weekly) by Age by Sex; Tenure Type and Landlord Type by Dwelling Structure](https://datapacks.censusdata.abs.gov.au/geopackages/)**</font>
 
@@ -276,85 +284,91 @@ This has implications for how the State approaches public health messaging to re
 
 **Table 2 Correlation of COVID19 and Dwelling structure**
 ```{r dwellin structure, warning = FALSE, echo = FALSE}
-
 det.cor <- cor.test(dat$House_Percent, dat$Cases.per.100K)
-
 semi.det.cor <- cor.test(dat$Semi.detached_Percent, dat$Cases.per.100K)
-
 apartment.cor <- cor.test(dat$Flat_Percent, dat$Cases.per.100K)
 
-correlation.main.dwellings <- data.frame(`Dwelling type` = c("Detached house", "Semi-detached","Apartment or flat"),
-                                         Correlation = c(det.cor$estimate, semi.det.cor$estimate, apartment.cor$estimate),
-                                         `P-value` = c(det.cor$p.value, semi.det.cor$p.value, apartment.cor$p.value))
+correlation.main.dwellings <- data.frame(
+    Dwelling_type = c("Detached house", "Semi-detached", "Apartment or flat"),
+    Correlation = c(det.cor$estimate, semi.det.cor$estimate, apartment.cor$estimate),
+    P_value = c(det.cor$p.value, semi.det.cor$p.value, apartment.cor$p.value)
+  ) %>%
+  mutate(
+    Correlation = round(Correlation, 3),
+    P_value = round(P_value, 3)
+  )
 
-correlation.main.dwellings[2:3]<-lapply(correlation.main.dwellings[2:3], round, digits =3)
-
-kable(correlation.main.dwellings)%>%
-  kable_styling(full_width = F, position = "left")%>%
+kable(correlation.main.dwellings) %>%
+  kable_styling(full_width = F, position = "left") %>%
   row_spec(1, color = "blue") %>%
   row_spec(2:3, color = "red")
-
 ```
 
 **Figure 3 COVID19 against housing type - by Postcode**
 ```{r dwelling structure vis, echo = FALSE, warning = FALSE}
-
 fit.det <- lm(Cases.per.100K ~ Semi.detached_Percent, data = dat)
 
-p1 <-dat %>%
- plot_ly(x = ~Semi.detached_Percent, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "(%) Semi-detached:",Semi.detached_Percent)) %>%
-  add_markers( showlegend =  FALSE) %>%
-  add_lines(x = ~ Semi.detached_Percent, y = ~fitted(fit.det), showlegend =  FALSE)
+p1 <- dat %>%
+  plot_ly(
+    x = ~Semi.detached_Percent, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "(%) Semi-detached:", Semi.detached_Percent
+    )
+  ) %>%
+  add_markers(showlegend = FALSE) %>%
+  add_lines(x = ~Semi.detached_Percent, y = ~ fitted(fit.det), showlegend = FALSE)
 
 fit.house <- lm(Cases.per.100K ~ House_Percent, data = dat)
 
-p2 <-dat %>%
-plot_ly(x = ~House_Percent, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "(%) House:",House_Percent)) %>%
-  add_markers( showlegend =  FALSE) %>%
-  add_lines(x = ~ House_Percent, y = ~fitted(fit.house), showlegend =  FALSE)
+p2 <- dat %>%
+  plot_ly(
+    x = ~House_Percent, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "(%) House:", House_Percent
+    )
+  ) %>%
+  add_markers(showlegend = FALSE) %>%
+  add_lines(x = ~House_Percent, y = ~ fitted(fit.house), showlegend = FALSE)
 
 fit.flat <- lm(Cases.per.100K ~ Flat_Percent, data = dat)
 
-p3 <-dat %>%
-plot_ly(x = ~Flat_Percent, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "(%) Flat_percent:",Flat_Percent)) %>%
-  add_markers( showlegend =  FALSE) %>%
-  add_lines(x = ~ Flat_Percent, y = ~fitted(fit.flat), showlegend =  FALSE)
+p3 <- dat %>%
+  plot_ly(
+    x = ~Flat_Percent, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "(%) Flat_percent:", Flat_Percent
+    )
+  ) %>%
+  add_markers(showlegend = FALSE) %>%
+  add_lines(x = ~Flat_Percent, y = ~ fitted(fit.flat), showlegend = FALSE)
 
-plotly::subplot(p2, p1, p3, nrows = 1)%>%
-layout(
-  yaxis = list(title = 'Cases per 100K'),
-  xaxis = list(title = '(%) House'),
-  xaxis2 = list(title = '(%) Semi-detached'),
-  xaxis3 = list(title = '(%) Flat')
-)
-
+plotly::subplot(p2, p1, p3, nrows = 1) %>%
+  layout(
+    yaxis = list(title = "Cases per 100K"),
+    xaxis = list(title = "(%) House"),
+    xaxis2 = list(title = "(%) Semi-detached"),
+    xaxis3 = list(title = "(%) Flat")
+  )
 ```
 
 <font size="2">**2016 Census - [Dwelling Structure](https://datapacks.censusdata.abs.gov.au/geopackages/)**</font>
 
-
-
 # COVID19 and timely access to public health information
 
 ```{r language and internet, echo = FALSE, warning = FALSE}
-
 language.cor <- cor.test(dat$Lang.NE, dat$Cases.per.100K)
-
 no.internet.cor <- cor.test(dat$No.home.access, dat$Cases.per.100K)
 ```
 
@@ -370,47 +384,46 @@ There was also positive correlation of `r round(no.internet.cor$estimate, digits
 
 **Figure 4 COVID19 against Home language, Internet access - by Postcode**
 ```{r language and internet vis, echo = FALSE, warnings = FALSE}
-
-fit.lang = lm(Cases.per.100K ~ Lang.NE, data = dat)
+fit.lang <- lm(Cases.per.100K ~ Lang.NE, data = dat)
 p1 <- dat %>%
-  plot_ly(x = ~Lang.NE, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "Home language not English:",Lang.NE)) %>%
-  add_markers(name = ~ "(%) Not English ") %>%
-  add_lines(x = ~Lang.NE, y = ~ fitted(fit.lang),  showlegend = F)
+  plot_ly(
+    x = ~Lang.NE, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "Home language not English:", Lang.NE
+    )
+  ) %>%
+  add_markers(name = ~"(%) Not English ") %>%
+  add_lines(x = ~Lang.NE, y = ~ fitted(fit.lang), showlegend = F)
 
-
-
-
-
-fit.internet = lm(Cases.per.100K ~ No.home.access, data = dat)
+fit.internet <- lm(Cases.per.100K ~ No.home.access, data = dat)
 
 p2 <- dat %>%
-  plot_ly(x = ~No.home.access, y = ~Cases.per.100K,
-        hoverinfo = "text",
-        text = ~paste("Postcode:" ,Postcode,"<br>",
-                      "Suburb:" ,Suburb,"<br>",
-                     "Cases:",Cases.per.100K,"<br>",
-                     "(%) No internet households:", No.home.access)) %>%
-  add_markers(name = ~ "(%) Households no internet") %>%
+  plot_ly(
+    x = ~No.home.access, y = ~Cases.per.100K,
+    hoverinfo = "text",
+    text = ~ paste(
+      "Postcode:", Postcode, "<br>",
+      "Suburb:", Suburb, "<br>",
+      "Cases:", Cases.per.100K, "<br>",
+      "(%) No internet households:", No.home.access
+    )
+  ) %>%
+  add_markers(name = ~"(%) Households no internet") %>%
   add_lines(x = ~No.home.access, y = ~ fitted(fit.internet), showlegend = F)
 
-
-plotly::subplot(p1, p2, nrows = 1)%>%
-layout(yaxis = list(title = 'Cases per 100K'),
-xaxis = list(title = '(%) Non English'),
-xaxis2 = list(title = '(%) No internet'))
-
-
+plotly::subplot(p1, p2, nrows = 1) %>%
+  layout(
+    yaxis = list(title = "Cases per 100K"),
+    xaxis = list(title = "(%) Non English"),
+    xaxis2 = list(title = "(%) No internet")
+  )
 ```
  <font size="2"> **2016 Census - [Language Spoken at Home by Proficiency in Spoken English/Language by Sex; Dwelling Internet Connection by Dwelling Structure](https://datapacks.censusdata.abs.gov.au/geopackages/)**</font>
  
-
-
-
 # Conclusion
 
 Statisticians are often encouraged to reduce differences down to a single disadvantage score or measure, because it is an elegant and concise way to explain phenomena. 
@@ -422,89 +435,85 @@ The association with renting, for example, highlights the importance of eviction
 The prevalence of transport work is also an important characteristic, since movement of essential freight and logistics workers is not something that we can, or would want to curtail.  
 
 #  Data downloads 
+
 ```{r data downloads, echo = FALSE, warnings = FALSE}
+# make sure exclusions are noted
+exclude <- all %>%
+  filter(
+    Population < 1500 | 
+    Suburb %in% c("Plenty", "Somerton", "Ardeer, Deer Park East") |
+    Postcode %in% c("3062", "3010")
+  ) %>%
+  pull(Postcode)
 
-#make sure exclusions are noted
-exclude <- all %>% 
-  filter(Population <1500|Suburb %in% c("Plenty","Somerton","Ardeer, Deer Park East")|
-                     Postcode %in% c("3062","3010")) %>%
-  select(Postcode) %>%
-  as.list()
+all <- all %>%
+  mutate(Exclude = ifelse(Postcode %in% exclude, "No", "Yes"))
 
-all <- all %>% 
-  mutate(Exclude = ifelse(Postcode %in% exclude$Postcode, "No","Yes"))
+standard <- c("Postcode", "Include", "Confirmed", "Population", "Cases.per.100K")
 
-standard <-c('Postcode','Include','Confirmed cases (ever)', 'Population','Cases.per.100K')
-
-transport <- all %>% 
+transport <- all %>%
   select(all_of(standard), P_Trans_post_wrehsg_Tot, P_Trans_post_wrehsg_Tot_Percent, P_Tot_Tot) %>%
   rename(Transport_postal_warehouse = P_Trans_post_wrehsg_Tot, Transport_percentage = P_Trans_post_wrehsg_Tot_Percent, Employed.15.over = P_Tot_Tot)
 
 write.csv(transport, "transport.csv", row.names = FALSE)
 
-xfun::embed_files('transport.csv', text = "Download Transport sector employment and COVID19 data as csv")
+xfun::embed_files("transport.csv", text = "Download Transport sector employment and COVID19 data as csv")
 ```
 \
 ```{r age data, echo = FALSE, warnings = FALSE}
-age <- all %>% 
-  select(all_of(standard), Median_age_persons) 
+age <- all %>%
+  select(all_of(standard), Median_age_persons)
 
-write.csv(age, "age.csv", row.names =  FALSE)
+write.csv(age, "age.csv", row.names = FALSE)
 
-xfun::embed_files('age.csv', text = "Download Median age and COVID19 data as csv")
+xfun::embed_files("age.csv", text = "Download Median age and COVID19 data as csv")
 ```
 \
 ```{r income data, echo = FALSE, warnings = FALSE}
-low.income <- all %>% select(all_of(standard), Low.income, Percent.poverty, Total_included_income) %>%
+low.income <- all %>%
+  select(all_of(standard), Low.income, Percent.poverty, Total_included_income) %>%
   rename(Under.500 = Low.income, Under.500.Percent = Percent.poverty, Age.15.Over.not.Nil.or.Negative = Total_included_income)
 
 write.csv(low.income, "low.income.csv", row.names = FALSE)
 
-xfun::embed_files('low.income.csv', text = "Download Low weekly income and COVID19 data as csv")
-
-
+xfun::embed_files("low.income.csv", text = "Download Low weekly income and COVID19 data as csv")
 ```
 \
 ```{r rent data, echo = FALSE, warnings = FALSE}
-rental.tenure <- all %>% select(all_of(standard), R_Tot_Total, R_Tot_Total_Percent, Total_Total) %>%
-  rename(Total.Rented = R_Tot_Total, Total.Rented.Percent  = R_Tot_Total_Percent, Total.Occupied.Dwellings = Total_Total)
+rental.tenure <- all %>%
+  select(all_of(standard), R_Tot_Total, R_Tot_Total_Percent, Total_Total) %>%
+  rename(Total.Rented = R_Tot_Total, Total.Rented.Percent = R_Tot_Total_Percent, Total.Occupied.Dwellings = Total_Total)
 
 write.csv(rental.tenure, "renting.csv", row.names = FALSE)
 
-xfun::embed_files('renting.csv', text = "Download rental tenure and COVID19 data as csv")
-
+xfun::embed_files("renting.csv", text = "Download rental tenure and COVID19 data as csv")
 ```
 \
 ```{r transport data, echo = FALSE, warnings = FALSE}
-
-
-dwelling <- all %>% 
+dwelling <- all %>%
   select(all_of(standard), Semi.detached, Flat, House, Semi.detached_Percent, Flat_Percent, House_Percent, Total.dwelling)
-
 
 write.csv(dwelling, "dwelling.csv", row.names = FALSE)
 
-xfun::embed_files('dwelling.csv', text = "Download Dwelling type Person level data as csv")
-
-
+xfun::embed_files("dwelling.csv", text = "Download Dwelling type Person level data as csv")
 ```
 \
 ```{r language data, echo = FALSE, warnings = FALSE}
-non.english <- all %>% 
+non.english <- all %>%
   select(all_of(standard), Lang_spoken_home_Oth_Lang_P, Lang.NE, Population) %>%
   rename(Lang_spoken_home_Oth_Lang_Percent = Lang.NE)
 
-write.csv(age, "language.csv", row.names =  FALSE)
+write.csv(age, "language.csv", row.names = FALSE)
 
-xfun::embed_files('language.csv', text = "Language other than English and COVID19 data as csv")
+xfun::embed_files("language.csv", text = "Language other than English and COVID19 data as csv")
 ```
 \
 ```{r internet data, echo = FALSE, warnings = FALSE}
-non.internet <- all %>% 
-  select(all_of(standard), I_NA_Total,No.home.access, Total_Total) %>%
-  rename(No.home.access = I_NA_Total, No.home.access.Percent =No.home.access, Total.Occupied.Dwellings = Total_Total)
+non.internet <- all %>%
+  select(all_of(standard), I_NA_Total, No.home.access, Total_Total) %>%
+  rename(No.home.access = I_NA_Total, No.home.access.Percent = No.home.access, Total.Occupied.Dwellings = Total_Total)
 
-write.csv(age, "internet.csv", row.names =  FALSE)
+write.csv(age, "internet.csv", row.names = FALSE)
 
-xfun::embed_files('internet.csv', text = "Home internet access and COVID19 data as csv")
+xfun::embed_files("internet.csv", text = "Home internet access and COVID19 data as csv")
 ```
