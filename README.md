@@ -12,9 +12,14 @@ underpinning the data journalism post [Postcode characteristics of
 Melbourne’s COVID19
 hotspots](https://www.deploythedata.com/2020/09/11/postcode-characteristics-of-melbournes-covid19-hotspots/)
 
-This repository outlines steps undertaken to accessing and visualise
-both COVID19 and ABS Census characteristics at postcode level. The
+The document below outlines steps undertaken to accessing, join and
+explore COVID19 and ABS Census characteristics at postcode level. The
 methods can be generalised to other projects.
+
+**Short version**: to install all dependent packages, run scripts and
+produce report see *Run all scripts and produce report.Rmd*
+
+Otherwise read the below to step through the process.
 
 ## Data sources
 
