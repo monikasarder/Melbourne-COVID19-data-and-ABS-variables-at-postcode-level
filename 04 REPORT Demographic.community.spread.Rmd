@@ -44,7 +44,7 @@ This social and economic reality was notably absent from the [modelling](https:/
 
 In order to achieve a successful COVID19 endgame, we need to identify the actual community characteristics that are correlated with high rates of transmission. A detailed understanding of the reality of the city, has informational value relevant to both the modelling, and the public health response.
 
-The final dataset comprises 222 Melbourne postcodes.^[Twenty-four of the postcodes were removed from the dataset because the population was too small to be meaningful (<1500 residents), or because an area had undergone a major redevelopment since the Census was undertaken, and the data no longer reflected the population. Excluded postcodes and reasons for exclusion are listed `r xfun::embed_files('exclusion.list.csv', text = "here")`] 
+The final dataset comprises 222 Melbourne postcodes.^[Twenty-four of the postcodes were removed from the dataset because the population was too small to be meaningful (<1500 residents), or because an area had undergone a major redevelopment since the Census was undertaken, and the data no longer reflected the population. Excluded postcodes and reasons for exclusion are listed `r xfun::embed_files('Outputs/exclusion.list.csv', text = "here")`] 
 
 # Data in this study
 

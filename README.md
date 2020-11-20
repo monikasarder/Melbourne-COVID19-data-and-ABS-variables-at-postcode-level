@@ -20,7 +20,7 @@ methods can be generalised to other projects.
 
 Four data sources were used:
 
-  - Will Mackeys package `absmaps`, which makes it straightforward to
+  - Will Mackey’s package `absmaps`, which makes it straightforward to
     download, compress and convert ABS shapefile data to `sf` objects in
     R. (Download and installation details are available from Will’s
     GitHub at [`absmaps`](https://github.com/wfmackey/absmapsdata).
@@ -48,7 +48,7 @@ The plot is not meaningful story as the cumulative case numbers have not
 yet been rationalised for population, however it should appear as
 follows
 
-![](Melbourne_Plot.jpg)
+![](README_files/figure/Melbourne_Plot.jpg)
 
 The joined Melbourne shapes and COVID dataset is in
 **Outputs/Melbourne.case.data.RDS**.
@@ -64,16 +64,15 @@ sub element is named according to its name in the Census metadata.
 This object is stored in **Outputs/ABS.Victoria.postcodes.RDS**.
 
 Once the file is unzipped I highly recommend reviewing the Metadata
-files at: */2016\_GCP\_POA\_for\_Vic\_short-header/2016 Census GCP
-Postal Areas for VIC/Metadata/Metadata\_2016\_GCP\_DataPack.xlsx* .
-
-The metadata table lists all data tables, and the unit at which they are
-collected. You will need this information to get a sense of what is
-important, and what steps you need to take to normalise postcode level
-data (eg is the unit of analysis persons, persons over 15, employed
-persons over 15, households etc).
+files. This is loaded into the global environoment and also available
+at: */2016\_GCP\_POA\_for\_Vic\_short-header/2016 Census GCP Postal
+Areas for VIC/Metadata/Metadata\_2016\_GCP\_DataPack.xlsx* .
 
 ## 03 Join and Explore ABS and COVID19 data.R
+
+This script sequentially links the COVID data file with ABS data tables
+and considers relationships at postcode level. The steps taken ar as
+follows.
 
   - Joins the COVID19 data with ABS table *G01 Selected Person
     Characteristics by Sex* which gives population tally for each
