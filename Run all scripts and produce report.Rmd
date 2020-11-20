@@ -508,9 +508,9 @@ xfun::embed_files("Outputs/low.income.csv", text = "Download Low weekly income a
 rental.tenure <- all %>%
   select(all_of(standard), Rented.Dwellings, Occupied.dwellings, Rented.Percent)
 
-write.csv(rental.tenure, "renting.csv", row.names = FALSE)
+write.csv(rental.tenure, "Outputs/renting.csv", row.names = FALSE)
 
-xfun::embed_files("renting.csv", text = "Download rental tenure and COVID19 data as csv")
+xfun::embed_files("Outputs/renting.csv", text = "Download rental tenure and COVID19 data as csv")
 ```
 \
 ```{r transport data, echo = FALSE, warnings = FALSE}
